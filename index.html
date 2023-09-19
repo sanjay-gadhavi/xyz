@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .task-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .task-item.completed {
+            background-color: #a0e57c;
+        }
+
+        .task-item button {
+            background-color: #ff5733;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .task-item button.edit-button {
+            background-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <input type="text" id="taskInput" class="task-input" placeholder="Add a new task">
+        <ul id="taskList" class="task-list"></ul>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById("taskInput");
+        const taskList = document.getElementById("taskList");
+
+        taskInput.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                addTask();
+            }
+        });
+
+        function addTask() {
+            const taskText = taskInput.value.trim();
+            if (taskText !== "") {
+                const taskItem = document.createElement("li");
+                taskItem.className = "task-item";
+                taskItem.innerHTML = `
+                    <span>${taskText}</span>
+                    <button onclick="editTask(this)" class="edit-button">Edit</button>
+                    <button onclick="toggleCompleted(this)">Complete</button>
+                    <button onclick="removeTask(this)">Remove</button>
+                `;
+                taskList.appendChild(taskItem);
+                taskInput.value = "";
+
+                saveTasksToLocalStorage();
+            }
+        }
+
+        function editTask(button) {
+            const taskSpan = button.parentElement.querySelector("span");
+            const newTaskText = prompt("Edit the task:", taskSpan.textContent);
+            if (newTaskText !== null && newTaskText.trim() !== "") {
+                taskSpan.textContent = newTaskText.trim();
+                saveTasksToLocalStorage();
+            }
+        }
+
+        function toggleCompleted(button) {
+            const taskItem = button.parentElement;
+            taskItem.classList.toggle("completed");
+            saveTasksToLocalStorage();
+        }
+
+        function removeTask(button) {
+            const taskItem = button.parentElement;
+            taskList.removeChild(taskItem);
+            saveTasksToLocalStorage();
+        }
+
+        function saveTasksToLocalStorage() {
+            const tasks = [];
+            const taskItems = document.querySelectorAll(".task-item");
+            taskItems.forEach((item) => {
+                const task = {
+                    text: item.querySelector("span").textContent,
+                    completed: item.classList.contains("completed"),
+                };
+                tasks.push(task);
+            });
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        function loadTasksFromLocalStorage() {
+            const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+            tasks.forEach((task) => {
+                const taskItem = document.createElement("li");
+                taskItem.className = "task-item" + (task.completed ? " completed" : "");
+                taskItem.innerHTML = `
+                    <span>${task.text}</span>
+                    <button onclick="editTask(this)" class="edit-button">Edit</button>
+                    <button onclick="toggleCompleted(this)">Complete</button>
+                    <button onclick="removeTask(this)">Remove</button>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // Load tasks from local storage when the page loads
+        loadTasksFromLocalStorage();
+    </script>
+</body>
+</html>
